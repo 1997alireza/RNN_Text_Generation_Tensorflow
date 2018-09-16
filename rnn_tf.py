@@ -125,7 +125,6 @@ class ModelNetwork:
             }
         )
         self.lstm_last_state = next_lstm_state[0]
-        print("!!!out", out)
         return out[0][0]
 
     # xbatch must be (batch_size, timesteps, input_size)
