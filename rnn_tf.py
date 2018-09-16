@@ -10,6 +10,8 @@ import time
 import numpy as np
 import tensorflow as tf
 
+os.environ['TF_CPP_MIN_LOG_LEVEL'] = '2'
+
 
 class ModelNetwork:
     """
@@ -34,7 +36,7 @@ class ModelNetwork:
         self.out_size = out_size
         self.session = session
         self.learning_rate = tf.constant(learning_rate)
-        # Last state of LSTM, used when running the network in TEST mode
+        # Last state of LSTM, used when running the network in TEST modeq
         self.lstm_last_state = np.zeros(
             (self.num_layers * 2 * self.lstm_size,)
         )
@@ -182,34 +184,40 @@ def check_restore_parameters(sess, saver):
         saver.restore(sess, ckpt.model_checkpoint_path)
 
 
-def main():
-    parser = argparse.ArgumentParser()
-    parser.add_argument(
-        "--input_file",
-        type=str,
-        default="data/shakespeare.txt",
-        help="Text file to load."
-    )
-    parser.add_argument(
-        "--test_prefix",
-        type=str,
-        default="The ",
-        help="Test text prefix to train the network."
-    )
-    parser.add_argument(
-        "--ckpt_file",
-        type=str,
-        default="saved/model.ckpt",
-        help="Model checkpoint file to load."
-    )
-    parser.add_argument(
-        "--mode",
-        type=str,
-        default="talk",
-        choices=set(("talk", "train")),
-        help="Execution mode: talk or train."
-    )
-    args = parser.parse_args()
+def main(m_mode="train", m_prefix="The "):
+    # parser = argparse.ArgumentParser()
+    # parser.add_argument(
+    #     "--input_file",
+    #     type=str,
+    #     default="shakespeare.txt",
+    #     help="Text file to load."
+    # )
+    # parser.add_argument(
+    #     "--test_prefix",
+    #     type=str,
+    #     default="The ",
+    #     help="Test text prefix to train the network."
+    # )
+    # parser.add_argument(
+    #     "--ckpt_file",
+    #     type=str,
+    #     default="saved/model.ckpt",
+    #     help="Model checkpoint file to load."
+    # )
+    # parser.add_argument(
+    #     "--mode",
+    #     type=str,
+    #     default="train",
+    #     choices=set(("talk", "train")),
+    #     help="Execution mode: talk or train."
+    # )
+    # args = parser.parse_args()
+
+    class args:
+        ckpt_file = "saved/model.ckpt"
+        test_prefix = m_prefix
+        mode = m_mode
+        input_file = "shakespeare.txt"
 
     ckpt_file = None
     TEST_PREFIX = args.test_prefix  # Prefix to prompt the network in test mode
@@ -297,4 +305,4 @@ def main():
 
 
 if __name__ == "__main__":
-    main()
+    main(m_mode='talk', m_prefix='How are')
