@@ -2,7 +2,7 @@
 Text generation using a Recurrent Neural Network (LSTM).
 """
 
-import argparse
+# import argparse
 import os
 import random
 import time
@@ -125,6 +125,7 @@ class ModelNetwork:
             }
         )
         self.lstm_last_state = next_lstm_state[0]
+        print("!!!out", out)
         return out[0][0]
 
     # xbatch must be (batch_size, timesteps, input_size)
@@ -151,6 +152,8 @@ def embed_to_vocab(data_, vocab):
 
     Vocab is a list of elements.
     """
+    print(data_, vocab)
+    print(len(data_), len(vocab))
     data = np.zeros((len(data_), len(vocab)))
     cnt = 0
     for s in data_:
@@ -237,7 +240,7 @@ def main(m_mode="train", m_prefix="The "):
     NUM_TRAIN_BATCHES = 20000
 
     # Number of test characters of text to generate after training the network
-    LEN_TEST_TEXT = 500
+    LEN_TEST_TEXT = 200
 
     # Initialize the network
     config = tf.ConfigProto()
