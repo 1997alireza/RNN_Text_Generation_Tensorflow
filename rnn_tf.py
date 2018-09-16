@@ -125,7 +125,6 @@ class ModelNetwork:
             }
         )
         self.lstm_last_state = next_lstm_state[0]
-        print("!!!out", out)
         return out[0][0]
 
     # xbatch must be (batch_size, timesteps, input_size)
@@ -145,22 +144,21 @@ class ModelNetwork:
         return cost
 
 
-def embed_to_vocab(data_, vocab):
+def embed_to_vocab(data_words, vocab):
     """
-    Embed string to character-arrays -- it generates an array len(data)
+    Embed string to word-arrays -- it generates an array len(words)
     x len(vocab).
 
     Vocab is a list of elements.
     """
-    print(data_, vocab)
-    print(len(data_), len(vocab))
-    data = np.zeros((len(data_), len(vocab)))
+    data = np.zeros((len(data_words), len(vocab)))
     cnt = 0
-    for s in data_:
-        v = [0.0] * len(vocab)
-        v[vocab.index(s)] = 1.0
-        data[cnt, :] = v
-        cnt += 1
+    for w in data_words:
+        if w in vocab:
+            v = [0.0] * len(vocab)
+            v[vocab.index(w)] = 1.0
+            data[cnt, :] = v
+            cnt += 1
     return data
 
 
@@ -175,8 +173,9 @@ def load_data(input):
         data_ += f.read()
     data_ = data_.lower()
     # Convert to 1-hot coding
-    vocab = sorted(list(set(data_)))
-    data = embed_to_vocab(data_, vocab)
+    data_words = data_.split(' ')
+    vocab = sorted(list(set(data_words)))
+    data = embed_to_vocab(data_words, vocab)
     return data, vocab
 
 
@@ -232,15 +231,15 @@ def main(m_mode="train", m_prefix="The "):
     data, vocab = load_data(args.input_file)
 
     in_size = out_size = len(vocab)
-    lstm_size = 256  # 128
+    lstm_size = 64  # 256
     num_layers = 2
-    batch_size = 64  # 128
-    time_steps = 100  # 50
+    batch_size = 8  # 64
+    time_steps = 10  # 100
 
     NUM_TRAIN_BATCHES = 20000
 
     # Number of test characters of text to generate after training the network
-    LEN_TEST_TEXT = 200
+    WORD_NUM_TEST_TEXT = 20
 
     # Initialize the network
     config = tf.ConfigProto()
@@ -267,7 +266,7 @@ def main(m_mode="train", m_prefix="The "):
         possible_batch_ids = range(data.shape[0] - time_steps - 1)
 
         for i in range(NUM_TRAIN_BATCHES):
-            # Sample time_steps consecutive samples from the dataset text file
+            # Sample time_steps consecutive samples from the dataset text file\
             batch_id = random.sample(possible_batch_ids, batch_size)
 
             for j in range(time_steps):
@@ -288,24 +287,26 @@ def main(m_mode="train", m_prefix="The "):
                 ))
                 saver.save(sess, ckpt_file)
     elif args.mode == "talk":
-        # 2) GENERATE LEN_TEST_TEXT CHARACTERS USING THE TRAINED NETWORK
+        # 2) GENERATE WORD_NUM_TEST_TEXT CHARACTERS USING THE TRAINED NETWORK
         saver.restore(sess, ckpt_file)
 
         TEST_PREFIX = TEST_PREFIX.lower()
-        for i in range(len(TEST_PREFIX)):
-            out = net.run_step(embed_to_vocab(TEST_PREFIX[i], vocab), i == 0)
+        prefix_words = TEST_PREFIX.split(' ')
+        for i in range(len(prefix_words)):
+            out = net.run_step(embed_to_vocab(prefix_words[i], vocab), i == 0)
 
         print("Sentence:")
         gen_str = TEST_PREFIX
-        for i in range(LEN_TEST_TEXT):
+        for i in range(WORD_NUM_TEST_TEXT):
             # Sample character from the network according to the generated
             # output probabilities.
             element = np.random.choice(range(len(vocab)), p=out)
-            gen_str += vocab[element]
+            gen_str += ' ' + vocab[element]
             out = net.run_step(embed_to_vocab(vocab[element], vocab), False)
 
         print(gen_str)
 
 
 if __name__ == "__main__":
-    main(m_mode='talk', m_prefix='How are')
+    # main(m_mode='talk', m_prefix='Hey man')
+    main()
